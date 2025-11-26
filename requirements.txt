@@ -1,13 +1,17 @@
 # Requirements for Clarius Module
 
 ## Core Dependencies (Required)
-numpy
 Pillow
 fastapi
 uvicorn
 grpcio
 grpcio-tools
+numpy
 opencv-python
+Pillow
+fastapi
+uvicorn
+requests
 
 ## Optional: gRPC Streaming Support
 # Uncomment nếu bạn muốn sử dụng streaming functionality

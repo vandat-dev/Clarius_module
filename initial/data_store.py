@@ -13,4 +13,4 @@ class CasterData:
         self.lock = threading.Lock()
 
 # Global shared state
-global_caster_data = CasterData()
+# global_caster_data = CasterData()  # Removed: Now using instance-based CasterData

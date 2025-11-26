@@ -1,24 +1,55 @@
 import os
 import cv2
 import numpy as np
+import ctypes
+from typing import Any
 from PIL import Image
 
 from initial.loader import pyclariuscast
-from initial.data_store import global_caster_data
-from initial.callbacks import (
-    newProcessedImage, newRawImage, newSpectrumImage,
-    newImuData, freezeFn, buttonsFn
-)
+from initial.data_store import CasterData
 
 
 class ClariusCasterClient:
     def __init__(self):
         self.caster = None
-        self.data_store = global_caster_data
+        self.data_store = CasterData()
 
         if pyclariuscast is None:
             self.data_store.message = "Clarius SDK not loaded."
             return
+
+        # Define callbacks as closures to capture self.data_store
+        def newProcessedImage(image: ctypes.c_void_p, width, height, sz, microns, ts, angle, imu: Any):
+            try:
+                buf = ctypes.string_at(image, sz)
+            except Exception as e:
+                self.data_store.message = f"Error reading memory: {e}"
+                return
+
+            with self.data_store.lock:
+                self.data_store.image_bytes = buf
+                self.data_store.image_width = width
+                self.data_store.image_height = height
+                self.data_store.image_size = sz
+                self.data_store.message = "Streaming live data."
+
+        # Unused callbacks (required by Caster signature)
+        newRawImage = lambda *args: None
+        newSpectrumImage = lambda *args: None
+        newImuData = lambda *args: None
+
+        def freezeFn(frozen: bool):
+            with self.data_store.lock:
+                self.data_store.frozen = frozen
+                self.data_store.message = "Image Frozen." if frozen else "Streaming live data."
+
+        def buttonsFn(button: int, clicks: int):
+            with self.data_store.lock:
+                self.data_store.button_info = (button, clicks)
+                self.data_store.message = f"Button {button} pressed ({clicks})."
+
+        # Keep references to callbacks to prevent garbage collection
+        self._callbacks = (newProcessedImage, newRawImage, newSpectrumImage, newImuData, freezeFn, buttonsFn)
 
         self.caster = pyclariuscast.Caster(
             newProcessedImage, newRawImage, newSpectrumImage,
@@ -69,7 +100,7 @@ class ClariusCasterClient:
 
         return None
 
-    def get_jpeg_bytes(self):
+    def get_webp_bytes(self):
         with self.data_store.lock:
             if not self.data_store.image_bytes:
                 return None
@@ -91,13 +122,13 @@ class ClariusCasterClient:
                 else:
                     return None
 
-                # numpy → JPEG
-                encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 75]
-                ok, jpeg = cv2.imencode(".jpg", arr, encode_param)
+                # numpy → WEBP
+                encode_param = [int(cv2.IMWRITE_WEBP_QUALITY), 75]
+                ok, webp = cv2.imencode(".webp", arr, encode_param)
                 if not ok:
                     return None
 
-                return jpeg.tobytes()
+                return webp.tobytes()
 
             except Exception as e:
                 self.data_store.message = f"Image convert error: {e}"

@@ -11,11 +11,11 @@ if client.connect("10.3.5.96", 5828):
     import time
     start = time.time()
 
-    while time.time() - start < 10:
-        jpeg_bytes = client.get_jpeg_bytes()
-        if jpeg_bytes:
+    while True:
+        webp_bytes = client.get_webp_bytes()
+        if webp_bytes:
             print("sending frame...")
-            sender.send_frame(jpeg_bytes)
+            sender.send_frame(webp_bytes)
         time.sleep(0.001)
 
 client.destroy()

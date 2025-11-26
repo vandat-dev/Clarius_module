@@ -23,7 +23,7 @@ from initial.constants import (
     CMD_B_MODE,
     CMD_CFI_MODE,
 )
-from initial.data_store import CasterData, global_caster_data
+from initial.data_store import CasterData
 
 # Optional: Import streaming client (requires grpcio)
 try:
@@ -36,7 +36,6 @@ except ImportError:
 __all__ = [
     'ClariusCasterClient',
     'CasterData',
-    'global_caster_data',
     'CMD_FREEZE',
     'CMD_CAPTURE_IMAGE',
     'CMD_CAPTURE_CINE',
