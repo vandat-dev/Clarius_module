@@ -1,0 +1,20 @@
+# Requirements for Clarius Module
+
+## Core Dependencies (Required)
+numpy
+Pillow
+fastapi
+uvicorn
+grpcio
+grpcio-tools
+opencv-python
+
+## Optional: gRPC Streaming Support
+# Uncomment nếu bạn muốn sử dụng streaming functionality
+# grpcio>=1.50.0
+# grpcio-tools>=1.50.0
+
+## Optional: Clarius SDK (Platform Specific)
+# Linux: Requires libcast.so and pyclariuscast
+# Windows: Requires libcast.dll and pyclariuscast
+# macOS: Requires libcast.dylib and pyclariuscast
