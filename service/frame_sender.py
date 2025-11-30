@@ -13,16 +13,35 @@ class GRPCFrameSender:
         self.channel = grpc.insecure_channel(self.target)
         self.stub = FrameServiceStub(self.channel)
 
-    def send_frame(self, jpeg_bytes: bytes) -> dict:
-        """Send 1 JPEG frame over gRPC (not using numpy RAW)"""
-        if not jpeg_bytes:
-            raise ValueError("Frame trống, không thể gửi.")
+    async def send_frame(self, frames: list[bytes]) -> dict:
+        """Gửi nhiều JPEG frames liên tục, không chờ response từng cái."""
+
+        async def request_generator():
+            for f in frames:
+                if not f:
+                    continue
+                yield FrameRequest(data=f)
+            # Khi yield xong => đóng stream
 
         try:
-            # Send frame JPEG
-            self.stub.SendFrame(FrameRequest(data=jpeg_bytes))
-            return {"ok": True, "message": "Frame sent"}
+            # Chỉ nhận response 1 lần cuối
+            await self.stub.SendFrame(request_generator())
+            return {"ok": True, "message": f"Sent {len(frames)} frames"}
 
         except Exception as e:
-            logger.error(f"Lỗi gửi frame: {e}")
+            logger.error(f"Lỗi gRPC streaming: {e}")
             return {"ok": False, "message": str(e)}
+
+    # def send_frame(self, jpeg_bytes: bytes) -> dict:
+    #     """Send 1 JPEG frame over gRPC (not using numpy RAW)"""
+    #     if not jpeg_bytes:
+    #         raise ValueError("Frame trống, không thể gửi.")
+    #
+    #     try:
+    #         # Send frame JPEG
+    #         self.stub.SendFrame(FrameRequest(data=jpeg_bytes))
+    #         return {"ok": True, "message": "Frame sent"}
+    #
+    #     except Exception as e:
+    #         logger.error(f"Lỗi gửi frame: {e}")
+    #         return {"ok": False, "message": str(e)}
