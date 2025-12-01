@@ -14,8 +14,11 @@ class ClariusCasterClient:
         self.caster = None
         self.data_store = CasterData()
 
+        print(f"[DEBUG ClariusCasterClient.__init__] pyclariuscast module = {pyclariuscast}")
+        
         if pyclariuscast is None:
             self.data_store.message = "Clarius SDK not loaded."
+            print("[DEBUG] ❌ Clarius SDK not loaded! pyclariuscast is None")
             return
 
         # Define callbacks as closures to capture self.data_store
@@ -55,13 +58,20 @@ class ClariusCasterClient:
             newProcessedImage, newRawImage, newSpectrumImage,
             newImuData, freezeFn, buttonsFn
         )
+        print(f"[DEBUG] ✓ Caster object created: {self.caster}")
 
         path = os.path.expanduser("~/")
-        if not self.caster.init(path, 640, 480):
+        print(f"[DEBUG] Calling caster.init(path='{path}', width=640, height=480)")
+        init_result = self.caster.init(path, 640, 480)
+        print(f"[DEBUG] caster.init() returned: {init_result}")
+        
+        if not init_result:
             self.data_store.message = "Failed to initialize Caster."
+            print("[DEBUG] ❌ caster.init() FAILED! Setting self.caster = None")
             self.caster = None
         else:
             self.data_store.message = "Caster initialized."
+            print("[DEBUG] ✓ Caster initialized successfully!")
 
     def connect(self, ip, port, mode="research"):
         if not self.caster:
